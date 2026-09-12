@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URSafe - Integration Guide</title>
+  <style>
+    :root {
+      --primary: #FF6B35;
+      --bg-dark: #0f0f0f;
+      --bg-card: #1a1a1a;
+      --text-primary: #f5f5f5;
+      --text-secondary: #d0d0d0;
+      --border: #333;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3 { font-family: 'Poppins', sans-serif; }
+    h1 { margin-bottom: 0.5rem; color: var(--primary); }
+    h2 { margin-top: 2rem; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem; }
+    h3 { margin-top: 1.5rem; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .feature-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      border-left: 4px solid var(--primary);
+    }
+
+    .feature-item strong { color: var(--primary); }
+
+    code {
+      background: rgba(255, 107, 53, 0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-family: 'Monaco', monospace;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.8rem 1.5rem;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-top: 1rem;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .code-block {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    .code-block code {
+      background: none;
+      padding: 0;
+      display: block;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .highlight {
+      background: rgba(255, 107, 53, 0.1);
+      padding: 1rem;
+      border-radius: 6px;
+      margin: 1rem 0;
+      border-left: 4px solid var(--primary);
+    }
+
+    ul, ol { margin: 1rem 0; padding-left: 2rem; }
+    li { margin: 0.5rem 0; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(39, 174, 96, 0.2);
+      color: #27AE60;
+      margin-left: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🤝 URSafe Volunteer Dashboard - Integration Guide</h1>
+<p><strong>Status:</strong> <span class="status-badge">✅ Ready to Use</span></p>
+
+<h2>📋 Quick Summary</h2>
+<p>A complete volunteer management dashboard with 6 integrated tabs for disaster relief coordination:</p>
+
+<div class="feature-grid">
+  <div class="feature-item">
+    <strong>🏕️ Camp Setup</strong>
+    <p>Volunteers enter camp details, type, capacity, and resources</p>
+  </div>
+  <div class="feature-item">
+    <strong>👥 Connect</strong>
+    <p>Message & call other volunteers with modal confirmation</p>
+  </div>
+  <div class="feature-item">
+    <strong>⚠️ Grievances</strong>
+    <p>View citizen emergencies & requests (highlighted alerts)</p>
+  </div>
+  <div class="feature-item">
+    <strong>💬 Community</strong>
+    <p>Share updates with visibility controls (everyone/volunteers/government/citizens)</p>
+  </div>
+  <div class="feature-item">
+    <strong>📋 History</strong>
+    <p>Complete activity log of all volunteer actions</p>
+  </div>
+  <div class="feature-item">
+    <strong>👤 Profile</strong>
+    <p>Account info, stats, settings, and logout</p>
+  </div>
+</div>
+
+<h2>✨ Key Features Implemented</h2>
+
+<h3>✅ Messaging System</h3>
+<div class="highlight">
+  <strong>How it works:</strong> When a volunteer clicks "💬 Message" on another volunteer:
+  <ul>
+    <li>Chat window pops up in bottom-right corner</li>
+    <li>Real-time message display</li>
+    <li>Close button to dismiss</li>
+    <li>Multiple chat windows can be open simultaneously</li>
+  </ul>
+</div>
+
+<h3>✅ Call Function</h3>
+<div class="highlight">
+  <strong>How it works:</strong> When a volunteer clicks "📞 Call":
+  <ul>
+    <li>Confirmation modal appears with phone number</li>
+    <li>Message: "Are you sure you want to call [Name] at [Number]?"</li>
+    <li>Two buttons: "Call" (green) or "Cancel"</li>
+    <li>Clicking Call logs activity and shows toast notification</li>
+  </ul>
+</div>
+
+<h3>✅ Grievance Highlighting</h3>
+<p>Critical grievances are automatically highlighted with:</p>
+<ul>
+  <li>Red left border (visual indicator)</li>
+  <li>Background tint</li>
+  <li>Pulsing warning emoji (⚠️)</li>
+  <li>Easy access to respond via message</li>
+</ul>
+
+<h3>✅ Community Visibility Controls</h3>
+<p>When posting to community, volunteers can choose who sees their message:</p>
+<ul>
+  <li>👥 <strong>Everyone</strong> - Citizens, Volunteers, Government</li>
+  <li>🤝 <strong>Volunteers Only</strong> - Internal coordination</li>
+  <li>🏛️ <strong>Government Only</strong> - Official communication</li>
+  <li>👫 <strong>Citizens Only</strong> - Public information</li>
+</ul>
+
+<h2>🚀 How to Use</h2>
+
+<h3>1. Access the Dashboard</h3>
+<p>Open in browser: <code>volunteer-dashboard.html</code></p>
+
+<h3>2. Redirect from Login</h3>
+<p>When user selects "Volunteer" role in login, redirect to the dashboard:</p>
+
+<div class="code-block"><code>
+// In your login form handling
+if (userRole === 'volunteer') {
+  window.location.href = 'volunteer-dashboard.html';
+}
+</code></div>
+
+<h3>3. Data Persistence</h3>
+<p>Dashboard reads/writes to localStorage with keys:</p>
+<ul>
+  <li><code>ursafe_user</code> - User profile (shared with main app)</li>
+  <li><code>volunteer_camp</code> - Camp setup information</li>
+</ul>
+
+<h2>📁 File Structure</h2>
+
+<div class="card">
+<pre><code>URSafe/
+├── <strong>volunteer-dashboard.html</strong>      ← Main volunteer dashboard
+├── complete.html                 ← Main app with calling
+├── index.html                    ← Login page
+├── VOLUNTEER_DASHBOARD_GUIDE.md  ← Full documentation
+├── js/
+│   ├── app.js
+│   ├── login.js
+│   └── ... other scripts
+├── css/
+│   └── style.css
+└── assets/
+    └── ... images & icons</code></pre>
+</div>
+
+<h2>🔧 Customization Options</h2>
+
+<h3>Change Colors</h3>
+<div class="code-block"><code>
+/* Edit CSS variables at top of volunteer-dashboard.html */
+:root {
+  --primary: #FF6B35;        /* Main orange */
+  --secondary: #004E89;      /* Dark blue */
+  --danger: #E74C3C;         /* Red for alerts */
+  --success: #27AE60;        /* Green */
+}
+</code></div>
+
+<h3>Add More Camp Types</h3>
+<div class="code-block"><code>
+&lt;select id="campType" required&gt;
+  &lt;option value="medical"&gt;🏥 Medical Relief&lt;/option&gt;
+  &lt;option value="supplies"&gt;📦 Supplies Distribution&lt;/option&gt;
+  &lt;option value="shelter"&gt;🏠 Emergency Shelter&lt;/option&gt;
+  &lt;option value="your-new-type"&gt;🎯 Your Type&lt;/option&gt;
+&lt;/select&gt;
+</code></div>
+
+<h3>Integrate Real Backend</h3>
+<div class="code-block"><code>
+// Replace mock data with API calls
+async generateMockData() {
+  this.volunteers = await fetch('/api/volunteers').then(r => r.json());
+  this.grievances = await fetch('/api/grievances').then(r => r.json());
+  this.communityPosts = await fetch('/api/posts').then(r => r.json());
+}
+</code></div>
+
+<h2>🔌 Integration with Main App</h2>
+
+<div class="highlight">
+  <strong>The dashboard is designed to work standalone but integrates with your main URSafe app through:</strong>
+  <ul>
+    <li><strong>Shared localStorage</strong> - Uses same user data structure</li>
+    <li><strong>Same styling</strong> - Matches your app's dark theme</li>
+    <li><strong>Consistent navigation</strong> - Similar UI patterns and bottom nav</li>
+    <li><strong>Easy redirect</strong> - Simple role-based routing from login</li>
+  </ul>
+</div>
+
+<h2>📞 Live Features Demo</h2>
+
+<h3>Sending a Message</h3>
+<ol>
+  <li>Go to <strong>Connect tab</strong></li>
+  <li>Click <strong>💬 Message</strong> on any volunteer</li>
+  <li>Chat window opens at bottom-right</li>
+  <li>Type message and click 📤</li>
+  <li>Message appears in conversation</li>
+</ol>
+
+<h3>Making a Call</h3>
+<ol>
+  <li>Go to <strong>Connect tab</strong></li>
+  <li>Click <strong>📞 Call</strong> on any volunteer</li>
+  <li>Modal appears: "Are you sure you want to call [Name] at [Number]?"</li>
+  <li>Click <strong>Call</strong> (green) to confirm</li>
+  <li>Toast shows: "📞 Calling [Name]..."</li>
+  <li>Activity logged in History</li>
+</ol>
+
+<h3>Responding to Grievances</h3>
+<ol>
+  <li>Go to <strong>Grievances tab</strong></li>
+  <li>Critical items highlighted in red</li>
+  <li>Click <strong>💬 Respond</strong> to message the person</li>
+  <li>Or click <strong>📍 View Location</strong> (for production)</li>
+</ol>
+
+<h3>Sharing Community Updates</h3>
+<ol>
+  <li>Go to <strong>Community tab</strong></li>
+  <li>Type your message in the text area</li>
+  <li>Choose visibility: Everyone / Volunteers / Government / Citizens</li>
+  <li>Click <strong>📤 Post</strong></li>
+  <li>Your post appears at top of feed</li>
+</ol>
+
+<h2>🎯 Next Steps for Production</h2>
+
+<div class="card">
+  <h3>Priority 1: Backend Integration</h3>
+  <ul>
+    <li>Create API endpoints for volunteers list</li>
+    <li>Create API for grievance management</li>
+    <li>Create API for community posts</li>
+    <li>Create API for saving camp data</li>
+  </ul>
+
+  <h3>Priority 2: Real Communication</h3>
+  <ul>
+    <li>Integrate WebSocket for real-time messaging</li>
+    <li>Add VoIP/Twilio for actual calling</li>
+    <li>Implement push notifications</li>
+  </ul>
+
+  <h3>Priority 3: Enhanced Features</h3>
+  <ul>
+    <li>GPS location tracking</li>
+    <li>Map view of volunteer locations</li>
+    <li>File/image attachments in messages</li>
+    <li>Video calling capability</li>
+    <li>Voice messages</li>
+  </ul>
+
+  <h3>Priority 4: Admin Features</h3>
+  <ul>
+    <li>Analytics dashboard</li>
+    <li>Activity monitoring</li>
+    <li>Grievance escalation workflows</li>
+    <li>Report generation</li>
+  </ul>
+</div>
+
+<h2>🧪 Testing Checklist</h2>
+
+<div class="card">
+  <input type="checkbox"> Dashboard loads without errors<br>
+  <input type="checkbox"> All 6 tabs are accessible<br>
+  <input type="checkbox"> Camp form saves data<br>
+  <input type="checkbox"> Message windows open/close properly<br>
+  <input type="checkbox"> Call confirmation modal appears<br>
+  <input type="checkbox"> Grievances highlight correctly<br>
+  <input type="checkbox"> Community posts respect visibility settings<br>
+  <input type="checkbox"> History logs all activities<br>
+  <input type="checkbox"> Profile stats update correctly<br>
+  <input type="checkbox"> Logout button works<br>
+  <input type="checkbox"> Responsive on mobile (tested at 375px width)<br>
+  <input type="checkbox"> Dark theme renders correctly<br>
+</div>
+
+<h2>📚 Documentation Files</h2>
+
+<ul>
+  <li><strong>volunteer-dashboard.html</strong> - Main dashboard (this file you just created)</li>
+  <li><strong>VOLUNTEER_DASHBOARD_GUIDE.md</strong> - Comprehensive feature guide</li>
+  <li><strong>This file</strong> - Quick integration reference</li>
+</ul>
+
+<h2>❓ FAQ</h2>
+
+<div class="card">
+  <strong>Q: Can multiple volunteers chat at the same time?</strong><br>
+  A: Yes! Multiple message windows can be open simultaneously. Each chat is independent.
+</div>
+
+<div class="card">
+  <strong>Q: Will messages persist after refresh?</strong><br>
+  A: Not in the current version (session-only). For production, connect to a database.
+</div>
+
+<div class="card">
+  <strong>Q: Can I customize the camp types?</strong><br>
+  A: Yes! Edit the select options in the Camp Setup form. Add as many as you need.
+</div>
+
+<div class="card">
+  <strong>Q: How do grievances get added?</strong><br>
+  A: Currently mock data. In production, citizens submit through main app → API → dashboard.
+</div>
+
+<div class="card">
+  <strong>Q: Is calling actually functional?</strong><br>
+  A: Currently shows confirmation modal and logs activity. For real calling, integrate Twilio or WebRTC.
+</div>
+
+<h2>📞 Support & Notes</h2>
+
+<div class="highlight">
+  <strong>All files are in your <code>URSafe/</code> directory:</strong>
+  <ul>
+    <li>Open <code>volunteer-dashboard.html</code> in a browser to test immediately</li>
+    <li>No dependencies - pure HTML/CSS/JavaScript</li>
+    <li>Works offline (except messaging/calls which need backend)</li>
+    <li>Fully responsive on mobile and desktop</li>
+    <li>Dark theme optimized</li>
+  </ul>
+</div>
+
+<p style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 0.9rem;">
+  <strong>Created:</strong> September 2026<br>
+  <strong>Version:</strong> 1.0<br>
+  <strong>Status:</strong> Production-Ready (with noted integrations needed)
+</p>
+
+</body>
+</html>

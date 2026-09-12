@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>URSafe Volunteer Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap">
+  <style>
+    :root {
+      --primary: #FF6B35;
+      --primary-light: #FF8C42;
+      --primary-dark: #E55A28;
+      --secondary: #004E89;
+      --secondary-light: #0066B3;
+      --success: #27AE60;
+      --warning: #F39C12;
+      --danger: #E74C3C;
+      --danger-light: #EC7063;
+      --bg-dark: #0f0f0f;
+      --bg-card: #1a1a1a;
+      --bg-input: #252525;
+      --text-primary: #f5f5f5;
+      --text-secondary: #d0d0d0;
+      --text-muted: #888;
+      --border: #333;
+      --highlight: #FF6B3520;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) {
+        --primary: #FF6B35;
+        --primary-light: #FF8C42;
+        --primary-dark: #E55A28;
+        --secondary: #004E89;
+        --secondary-light: #0066B3;
+        --bg-dark: #f8f9fa;
+        --bg-card: #ffffff;
+        --bg-input: #f0f2f5;
+        --text-primary: #1a1a1a;
+        --text-secondary: #4a4a4a;
+        --text-muted: #999;
+        --border: #e0e0e0;
+        --highlight: #FF6B3510;
+      }
+    }
+
+    :root[data-theme="light"] {
+      --primary: #FF6B35;
+      --primary-light: #FF8C42;
+      --primary-dark: #E55A28;
+      --secondary: #004E89;
+      --secondary-light: #0066B3;
+      --bg-dark: #f8f9fa;
+      --bg-card: #ffffff;
+      --bg-input: #f0f2f5;
+      --text-primary: #1a1a1a;
+      --text-secondary: #4a4a4a;
+      --text-muted: #999;
+      --border: #e0e0e0;
+      --highlight: #FF6B3510;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .volunteer-app {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+
+    .app-header {
+      padding: 1rem 1.5rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .app-header h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .header-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .header-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .tabs-container {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      scroll-behavior: smooth;
+    }
+
+    .tab-btn {
+      padding: 0.7rem 1.2rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .tab-btn:hover {
+      background: var(--bg-input);
+      border-color: var(--border);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      background: var(--highlight);
+      border-color: var(--primary);
+    }
+
+    .content-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .tab-content {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      animation: fadeIn 0.3s;
+    }
+
+    .tab-content.active {
+      display: block;
+      opacity: 1;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.1);
+    }
+
+    .card.highlighted {
+      border-color: var(--danger);
+      background: rgba(231, 76, 60, 0.05);
+    }
+
+    .card.highlighted::before {
+      content: '⚠️';
+      display: inline-block;
+      margin-right: 0.5rem;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* CAMP SETUP TAB */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: var(--bg-card);
+      box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.25);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      padding: 0.8rem 1.2rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-input);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-small {
+      padding: 0.5rem 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-small:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-small.secondary {
+      background: var(--secondary);
+    }
+
+    .btn-small.secondary:hover {
+      background: var(--secondary-light);
+    }
+
+    .btn-small.danger {
+      background: var(--danger);
+    }
+
+    .btn-small.danger:hover {
+      background: var(--danger-light);
+    }
+
+    /* VOLUNTEERS CONNECT TAB */
+    .volunteer-card {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .volunteer-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .volunteer-info {
+      flex: 1;
+    }
+
+    .volunteer-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.2rem;
+    }
+
+    .volunteer-detail {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .volunteer-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.7rem;
+    }
+
+    /* MESSAGING */
+    .message-window {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 320px;
+      height: 400px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      z-index: 500;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .message-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .message-header h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .message-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .message {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+
+    .message.sent {
+      justify-content: flex-end;
+    }
+
+    .message-text {
+      background: var(--bg-input);
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+
+    .message.sent .message-text {
+      background: var(--primary);
+      color: white;
+    }
+
+    .message-input {
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .message-input input {
+      flex: 1;
+      padding: 0.6rem;
+      font-size: 0.85rem;
+    }
+
+    .message-input button {
+      padding: 0.6rem 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* GRIEVANCES TAB */
+    .grievance-item {
+      border-left: 4px solid var(--danger);
+      padding-left: 1rem;
+    }
+
+    .grievance-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .grievance-type {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      background: var(--danger);
+      color: white;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .grievance-type.medical {
+      background: var(--danger-light);
+    }
+
+    .grievance-type.emergency {
+      background: #c0392b;
+    }
+
+    .grievance-time {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .grievance-message {
+      margin-top: 0.5rem;
+      color: var(--text-secondary);
+    }
+
+    .grievance-sender {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    /* COMMUNITY TAB */
+    .community-post {
+      margin-bottom: 1rem;
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.8rem;
+    }
+
+    .post-author {
+      flex: 1;
+    }
+
+    .post-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .post-time {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .visibility-badge {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      background: var(--bg-input);
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .post-content {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 0.8rem;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .post-action-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+
+    .post-action-btn:hover {
+      color: var(--primary);
+    }
+
+    /* HISTORY TAB */
+    .history-item {
+      display: flex;
+      gap: 1rem;
+      padding: 0.8rem;
+      background: var(--bg-input);
+      border-radius: 6px;
+      margin-bottom: 0.7rem;
+    }
+
+    .history-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .history-content {
+      flex: 1;
+    }
+
+    .history-action {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+    }
+
+    .history-time {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    /* PROFILE TAB */
+    .profile-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .profile-header {
+      text-align: center;
+      padding: 2rem 0;
+      margin-bottom: 1.5rem;
+    }
+
+    .profile-avatar-lg {
+      width: 80px;
+      height: 80px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 auto 1rem;
+    }
+
+    .profile-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+
+    .profile-role {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .profile-stat {
+      display: flex;
+      justify-content: space-around;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .modal.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 400px;
+      animation: slideUp 0.3s ease;
+    }
+
+    .modal-content h3 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .modal-content p {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 0.9rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-actions .btn-primary {
+      width: auto;
+      margin: 0;
+    }
+
+    .modal-actions .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .modal-actions .btn-cancel:hover {
+      background: var(--bg-input);
+    }
+
+    .visibility-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin: 1rem 0;
+    }
+
+    .visibility-option {
+      padding: 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .visibility-option:hover {
+      border-color: var(--primary);
+    }
+
+    .visibility-option.selected {
+      background: var(--highlight);
+      border-color: var(--primary);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    .nav-item .icon {
+      font-size: 20px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 1rem;
+      right: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      z-index: 400;
+      animation: slideUp 0.3s ease;
+      font-size: 0.9rem;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-muted {
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="volunteer-app">
+  <!-- HEADER -->
+  <div class="app-header">
+    <h2>🤝 Volunteer Dashboard</h2>
+    <div class="header-actions">
+      <div class="header-btn" id="notificationsBtn" title="Notifications">🔔</div>
+      <div class="header-btn" id="profileBtn" title="Profile">👤</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-container">
+    <button class="tab-btn active" data-tab="camp">🏕️ Camp Setup</button>
+    <button class="tab-btn" data-tab="connect">👥 Connect</button>
+    <button class="tab-btn" data-tab="grievances">⚠️ Grievances</button>
+    <button class="tab-btn" data-tab="community">💬 Community</button>
+    <button class="tab-btn" data-tab="history">📋 History</button>
+    <button class="tab-btn" data-tab="profile">👤 Profile</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-container">
+
+    <!-- CAMP SETUP TAB -->
+    <div class="tab-content active" id="camp-tab">
+      <div class="section-title">🏕️ Camp Setup Information</div>
+      <form id="campForm" class="card">
+        <div class="form-group">
+          <label for="campName">Camp Name *</label>
+          <input type="text" id="campName" placeholder="e.g., Medical Relief Camp - Downtown" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="campLocation">Location/Address *</label>
+            <input type="text" id="campLocation" placeholder="Street address" required>
+          </div>
+          <div class="form-group">
+            <label for="campCapacity">Capacity *</label>
+            <input type="number" id="campCapacity" placeholder="Number of people" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="campType">Camp Type *</label>
+          <select id="campType" required>
+            <option value="">Select camp type</option>
+            <option value="medical">🏥 Medical Relief</option>
+            <option value="supplies">📦 Supplies Distribution</option>
+            <option value="shelter">🏠 Emergency Shelter</option>
+            <option value="rescue">🚒 Rescue & Relief</option>
+            <option value="food">🍚 Food & Water</option>
+            <option value="communication">📡 Communication Hub</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="campDescription">Description/Details</label>
+          <textarea id="campDescription" placeholder="Describe what your camp offers, available resources, special services..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="campPhone">Contact Phone</label>
+            <input type="tel" id="campPhone" placeholder="Phone number">
+          </div>
+          <div class="form-group">
+            <label for="campStatus">Status</label>
+            <select id="campStatus">
+              <option value="active">🟢 Active</option>
+              <option value="planning">🟡 Planning</option>
+              <option value="temporary">🔵 Temporary</option>
+              <option value="closed">⚪ Closed</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">💾 Save Camp Information</button>
+      </form>
+    </div>
+
+    <!-- VOLUNTEERS CONNECT TAB -->
+    <div class="tab-content" id="connect-tab">
+      <div class="section-title">👥 Connect with Other Volunteers</div>
+      <div id="volunteersContainer"></div>
+    </div>
+
+    <!-- GRIEVANCES TAB -->
+    <div class="tab-content" id="grievances-tab">
+      <div class="section-title">⚠️ Citizen Grievances & Emergencies</div>
+      <div id="grievancesContainer"></div>
+    </div>
+
+    <!-- COMMUNITY TAB -->
+    <div class="tab-content" id="community-tab">
+      <div class="section-title">💬 Community Feed</div>
+
+      <div class="card">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="communityPost">Share an Update</label>
+          <textarea id="communityPost" placeholder="Share important information with the community..." style="min-height: 80px;"></textarea>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <select id="visibilitySelect" style="flex: 1;">
+            <option value="all">👥 Everyone (Citizens, Volunteers, Government)</option>
+            <option value="volunteers">🤝 Volunteers Only</option>
+            <option value="government">🏛️ Government Bodies Only</option>
+            <option value="citizens">👫 Citizens Only</option>
+          </select>
+          <button class="btn-primary" id="postBtn" style="flex: 0 0 120px;">📤 Post</button>
+        </div>
+      </div>
+
+      <div id="communityFeedContainer"></div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="tab-content" id="history-tab">
+      <div class="section-title">📋 Activity History</div>
+      <div id="historyContainer"></div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="tab-content" id="profile-tab">
+      <div class="profile-header">
+        <div class="profile-avatar-lg" id="profileAvatar">V</div>
+        <div class="profile-name" id="profileName">Volunteer Name</div>
+        <div class="profile-role">Volunteer</div>
+        <div class="profile-stat">
+          <div class="stat-item">
+            <div class="stat-number" id="statCamps">0</div>
+            <div class="stat-label">Camps</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" id="statConnections">0</div>
+            <div class="stat-label">Connections</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" id="statPosts">0</div>
+            <div class="stat-label">Posts</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-section card">
+        <h4 style="margin-bottom: 1rem; font-weight: 600;">Account Settings</h4>
+        <button class="btn-secondary" style="width: 100%; margin-bottom: 0.8rem;">✏️ Edit Profile</button>
+        <button class="btn-secondary" style="width: 100%; margin-bottom: 0.8rem;">🔔 Notification Preferences</button>
+        <button class="btn-secondary" style="width: 100%; margin-bottom: 0.8rem;">🔐 Privacy Settings</button>
+        <button class="btn-secondary" id="logoutBtn" style="width: 100%; color: var(--danger); border-color: var(--danger);">🚪 Logout</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" data-nav="camp">
+      <div class="icon">🏕️</div>
+      <div>Camp</div>
+    </div>
+    <div class="nav-item" data-nav="connect">
+      <div class="icon">👥</div>
+      <div>Connect</div>
+    </div>
+    <div class="nav-item" data-nav="grievances">
+      <div class="icon">⚠️</div>
+      <div>Grievances</div>
+    </div>
+    <div class="nav-item" data-nav="community">
+      <div class="icon">💬</div>
+      <div>Community</div>
+    </div>
+    <div class="nav-item" data-nav="history">
+      <div class="icon">📋</div>
+      <div>History</div>
+    </div>
+    <div class="nav-item" data-nav="profile">
+      <div class="icon">👤</div>
+      <div>Profile</div>
+    </div>
+  </div>
+</div>
+
+<!-- CALL CONFIRMATION MODAL -->
+<div class="modal" id="callModal">
+  <div class="modal-content">
+    <h3>📞 Confirm Call</h3>
+    <p id="callModalMessage">Are you sure you want to call this number?</p>
+    <div class="modal-actions">
+      <button class="btn-primary" id="confirmCallBtn">Call</button>
+      <button class="btn-cancel" id="cancelCallBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MESSAGE WINDOW (will be created dynamically) -->
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast hidden" id="toast"></div>
+
+<script>
+class VolunteerDashboard {
+  constructor() {
+    this.currentUser = null;
+    this.volunteers = [];
+    this.grievances = [];
+    this.communityPosts = [];
+    this.activityHistory = [];
+    this.campData = null;
+    this.messageWindows = new Map();
+    this.init();
+  }
+
+  init() {
+    this.loadUserData();
+    this.setupEventListeners();
+    this.generateMockData();
+    this.renderVolunteers();
+    this.renderGrievances();
+    this.renderCommunityFeed();
+    this.renderHistory();
+  }
+
+  loadUserData() {
+    const stored = localStorage.getItem('ursafe_user');
+    if (stored) {
+      this.currentUser = JSON.parse(stored);
+    } else {
+      this.currentUser = { name: 'Volunteer', id: 'user_volunteer' };
+    }
+    this.updateProfileDisplay();
+  }
+
+  updateProfileDisplay() {
+    const initial = this.currentUser.name.charAt(0).toUpperCase();
+    document.getElementById('profileAvatar').textContent = initial;
+    document.getElementById('profileName').textContent = this.currentUser.name;
+  }
+
+  generateMockData() {
+    this.volunteers = [
+      { id: 1, name: 'Dr. Anita Kumar', specialty: 'Medical Doctor', phone: '9821234567', status: 'available', camp: 'Medical Relief Camp' },
+      { id: 2, name: 'Rahul Singh', specialty: 'Rescue & Relief', phone: '9876543210', status: 'available', camp: 'Downtown Shelter' },
+      { id: 3, name: 'Meena Patel', specialty: 'Supply Distribution', phone: '9123456789', status: 'busy', camp: 'Supply Distribution Hub' },
+      { id: 4, name: 'Arjun Verma', specialty: 'Communication Hub', phone: '9998765432', status: 'available', camp: 'Comm Hub - Area 5' },
+    ];
+
+    this.grievances = [
+      {
+        id: 1,
+        type: 'medical',
+        sender: 'Rajesh Patel',
+        message: 'Family member needs immediate medical assistance - severe injury',
+        time: '2 mins ago',
+        priority: 'critical'
+      },
+      {
+        id: 2,
+        type: 'emergency',
+        sender: 'Priya Sharma',
+        message: 'Missing child - last seen near market area',
+        time: '5 mins ago',
+        priority: 'critical'
+      },
+      {
+        id: 3,
+        type: 'supplies',
+        sender: 'Ahmad Khan',
+        message: 'Need food and water for elderly family members',
+        time: '15 mins ago',
+        priority: 'high'
+      },
+    ];
+
+    this.communityPosts = [
+      {
+        id: 1,
+        author: 'Relief Coordinator',
+        message: 'Medical camps are operational in downtown area. Blood donation needed.',
+        visibility: 'all',
+        time: '30 mins ago'
+      },
+      {
+        id: 2,
+        author: 'Government Official',
+        message: 'Curfew extended till 8 PM. Safe routes updated.',
+        visibility: 'all',
+        time: '1 hour ago'
+      },
+    ];
+  }
+
+  setupEventListeners() {
+    // Tab navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
+    });
+
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tab = btn.closest('.nav-item').dataset.nav;
+        this.switchTab(tab);
+      });
+    });
+
+    // Camp form
+    document.getElementById('campForm').addEventListener('submit', (e) => this.saveCampData(e));
+
+    // Community post
+    document.getElementById('postBtn').addEventListener('click', () => this.postCommunityMessage());
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+
+    // Call modal
+    document.getElementById('cancelCallBtn').addEventListener('click', () => this.closeCallModal());
+  }
+
+  switchTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+    // Update nav items
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    document.querySelector(`[data-nav="${tabName}"]`).classList.add('active');
+
+    // Update content
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+
+    // Log activity
+    this.addActivity(`Viewed ${tabName} section`);
+  }
+
+  renderVolunteers() {
+    const container = document.getElementById('volunteersContainer');
+    container.innerHTML = '';
+
+    this.volunteers.forEach(vol => {
+      const card = document.createElement('div');
+      card.className = 'card volunteer-card';
+      card.innerHTML = `
+        <div class="volunteer-avatar">${vol.name.charAt(0)}</div>
+        <div class="volunteer-info">
+          <div class="volunteer-name">${vol.name} ${vol.status === 'available' ? '✓' : ''}</div>
+          <div class="volunteer-detail">📍 ${vol.specialty}</div>
+          <div class="volunteer-detail">🏕️ ${vol.camp}</div>
+          <div class="volunteer-actions">
+            <button class="btn-small" onclick="dashboard.openMessageWindow(${vol.id}, '${vol.name}')">💬 Message</button>
+            <button class="btn-small secondary" onclick="dashboard.initiateCall(${vol.id}, '${vol.phone}', '${vol.name}')">📞 Call</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  renderGrievances() {
+    const container = document.getElementById('grievancesContainer');
+    container.innerHTML = '';
+
+    this.grievances.forEach(griev => {
+      const card = document.createElement('div');
+      card.className = `card grievance-item ${griev.priority === 'critical' ? 'highlighted' : ''}`;
+      card.innerHTML = `
+        <div class="grievance-header">
+          <div>
+            <span class="grievance-type ${griev.type}">${griev.type.toUpperCase()}</span>
+          </div>
+          <div class="grievance-time">${griev.time}</div>
+        </div>
+        <div class="grievance-message">"${griev.message}"</div>
+        <div class="grievance-sender">From: ${griev.sender}</div>
+        <div class="volunteer-actions" style="margin-top: 1rem;">
+          <button class="btn-small danger">📍 View Location</button>
+          <button class="btn-small secondary" onclick="dashboard.openMessageWindow('${griev.sender}', '${griev.sender}')">💬 Respond</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  renderCommunityFeed() {
+    const container = document.getElementById('communityFeedContainer');
+    container.innerHTML = '';
+
+    this.communityPosts.forEach(post => {
+      const card = document.createElement('div');
+      card.className = 'card community-post';
+      card.innerHTML = `
+        <div class="post-header">
+          <div class="post-author">
+            <div class="post-name">${post.author}</div>
+            <div class="post-time">${post.time}</div>
+          </div>
+          <div class="visibility-badge">${this.getVisibilityLabel(post.visibility)}</div>
+        </div>
+        <div class="post-content">${post.message}</div>
+        <div class="post-actions">
+          <button class="post-action-btn">👍 Like</button>
+          <button class="post-action-btn">💬 Reply</button>
+          <button class="post-action-btn">🔖 Share</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  getVisibilityLabel(visibility) {
+    const labels = {
+      all: '👥 Everyone',
+      volunteers: '🤝 Volunteers',
+      government: '🏛️ Government',
+      citizens: '👫 Citizens'
+    };
+    return labels[visibility] || 'Everyone';
+  }
+
+  renderHistory() {
+    const container = document.getElementById('historyContainer');
+    container.innerHTML = '';
+
+    if (this.activityHistory.length === 0) {
+      container.innerHTML = '<div class="text-center text-muted" style="padding: 2rem;">No activity yet</div>';
+      return;
+    }
+
+    this.activityHistory.slice(0, 20).forEach(activity => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `
+        <div class="history-icon">${activity.icon}</div>
+        <div class="history-content">
+          <div class="history-action">${activity.action}</div>
+          <div class="history-time">${activity.time}</div>
+        </div>
+      `;
+      container.appendChild(item);
+    });
+  }
+
+  postCommunityMessage() {
+    const message = document.getElementById('communityPost').value.trim();
+    const visibility = document.getElementById('visibilitySelect').value;
+
+    if (!message) {
+      this.showToast('Please write a message');
+      return;
+    }
+
+    const post = {
+      id: this.communityPosts.length + 1,
+      author: this.currentUser.name,
+      message,
+      visibility,
+      time: 'just now'
+    };
+
+    this.communityPosts.unshift(post);
+    this.renderCommunityFeed();
+    document.getElementById('communityPost').value = '';
+    this.showToast('✅ Post shared successfully');
+    this.addActivity('Posted to community', '💬');
+  }
+
+  openMessageWindow(volunteerId, volunteerName) {
+    if (this.messageWindows.has(volunteerId)) {
+      return;
+    }
+
+    const window = document.createElement('div');
+    window.className = 'message-window';
+    window.id = `msg-window-${volunteerId}`;
+    window.innerHTML = `
+      <div class="message-header">
+        <h3>${volunteerName}</h3>
+        <button class="close-btn" onclick="dashboard.closeMessageWindow(${volunteerId})">✕</button>
+      </div>
+      <div class="message-body"></div>
+      <div class="message-input">
+        <input type="text" placeholder="Type a message..." class="msg-input">
+        <button class="send-msg-btn" onclick="dashboard.sendMessage(${volunteerId})">📤</button>
+      </div>
+    `;
+
+    document.body.appendChild(window);
+    this.messageWindows.set(volunteerId, window);
+    this.showToast(`💬 Opened chat with ${volunteerName}`);
+    this.addActivity(`Started messaging with ${volunteerName}`, '💬');
+  }
+
+  closeMessageWindow(volunteerId) {
+    const window = this.messageWindows.get(volunteerId);
+    if (window) {
+      window.remove();
+      this.messageWindows.delete(volunteerId);
+    }
+  }
+
+  sendMessage(volunteerId) {
+    const window = document.getElementById(`msg-window-${volunteerId}`);
+    const input = window.querySelector('.msg-input');
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    const body = window.querySelector('.message-body');
+    const msgEl = document.createElement('div');
+    msgEl.className = 'message sent';
+    msgEl.innerHTML = `<div class="message-text">${message}</div>`;
+    body.appendChild(msgEl);
+    body.scrollTop = body.scrollHeight;
+    input.value = '';
+  }
+
+  initiateCall(volunteerId, phone, name) {
+    const modal = document.getElementById('callModal');
+    const message = document.getElementById('callModalMessage');
+    message.textContent = `Are you sure you want to call ${name} at ${phone}?`;
+
+    const confirmBtn = document.getElementById('confirmCallBtn');
+    confirmBtn.onclick = () => {
+      this.showToast(`📞 Calling ${name}...`);
+      this.closeCallModal();
+      this.addActivity(`Called ${name}`, '📞');
+    };
+
+    modal.classList.add('active');
+  }
+
+  closeCallModal() {
+    document.getElementById('callModal').classList.remove('active');
+  }
+
+  saveCampData(e) {
+    e.preventDefault();
+    this.campData = {
+      name: document.getElementById('campName').value,
+      location: document.getElementById('campLocation').value,
+      type: document.getElementById('campType').value,
+      capacity: document.getElementById('campCapacity').value,
+    };
+
+    localStorage.setItem('volunteer_camp', JSON.stringify(this.campData));
+    this.showToast('✅ Camp information saved successfully');
+    this.addActivity('Updated camp information', '🏕️');
+  }
+
+  addActivity(action, icon = '📍') {
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    this.activityHistory.unshift({
+      action,
+      icon,
+      time
+    });
+
+    if (this.activityHistory.length > 50) {
+      this.activityHistory = this.activityHistory.slice(0, 50);
+    }
+
+    const statPosts = this.communityPosts.filter(p => p.author === this.currentUser.name).length;
+    document.getElementById('statPosts').textContent = statPosts;
+    document.getElementById('statConnections').textContent = this.volunteers.length;
+  }
+
+  showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+  }
+
+  logout() {
+    if (confirm('Are you sure you want to logout?')) {
+      localStorage.removeItem('ursafe_user');
+      localStorage.removeItem('volunteer_camp');
+      this.showToast('👋 Logged out successfully');
+      setTimeout(() => window.location.href = 'index.html', 1000);
+    }
+  }
+}
+
+let dashboard = null;
+document.addEventListener('DOMContentLoaded', () => {
+  dashboard = new VolunteerDashboard();
+});
+</script>
+
+</body>
+</html>

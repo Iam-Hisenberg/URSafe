@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>URSafe - Disaster Safety App</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
+  <style>
+    :root {
+      --primary: #FF6B35;
+      --primary-dark: #E55A28;
+      --secondary: #004E89;
+      --success: #27AE60;
+      --danger: #E74C3C;
+      --warning: #F39C12;
+      --bg-dark: #0f0f0f;
+      --bg-card: #1a1a1a;
+      --bg-input: #252525;
+      --text-primary: #f5f5f5;
+      --text-secondary: #d0d0d0;
+      --text-muted: #888;
+      --border: #333;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) {
+        --primary: #FF6B35;
+        --primary-dark: #E55A28;
+        --secondary: #004E89;
+        --success: #27AE60;
+        --danger: #E74C3C;
+        --warning: #F39C12;
+        --bg-dark: #f8f9fa;
+        --bg-card: #ffffff;
+        --bg-input: #f0f1f3;
+        --text-primary: #1a1a1a;
+        --text-secondary: #4a4a4a;
+        --text-muted: #888;
+        --border: #ddd;
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    @keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
+    @keyframes slideIn { from { width: 0; } to { width: 100%; } }
+    @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .splash-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      animation: fadeOut 0.6s ease-out 2.4s forwards;
+    }
+
+    .splash-content { text-align: center; }
+    .splash-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+    }
+    .splash-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      margin-bottom: 2rem;
+    }
+    .splash-loader {
+      width: 180px;
+      height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+      overflow: hidden;
+      margin: 0 auto;
+    }
+    .loader-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      animation: slideIn 2.4s ease-in;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity 0.3s ease;
+    }
+    .page.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .login-page {
+      background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding-bottom: 2rem;
+    }
+
+    .login-header {
+      text-align: center;
+      padding: 3rem 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .login-logo { font-size: 3rem; margin-bottom: 1rem; }
+    .login-header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .login-form-container {
+      flex: 1;
+      padding: 2rem 1.5rem;
+      overflow-y: auto;
+    }
+
+    .login-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .login-tab {
+      padding: 0.8rem 1.5rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .login-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #2d2d2d;
+      box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.1);
+    }
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--primary), #FF8C42);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.25);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-text { display: block; }
+    .btn-loader { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+
+    .form-hidden { display: none; }
+
+    #main-app {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+
+    .app-header {
+      padding: 1rem 1.5rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .app-header h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 0.5rem;
+      transition: color 0.2s;
+    }
+    .theme-toggle:hover {
+      color: var(--primary);
+    }
+
+    .sections-container {
+      flex: 1;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .section {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+    .section.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .section-header {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      color: var(--text-primary);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.9rem;
+      transition: all 0.2s;
+    }
+    .card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.1);
+    }
+
+    .card.alert-critical {
+      border-left: 4px solid var(--danger);
+      background: rgba(231, 76, 60, 0.05);
+    }
+    .card.alert-critical::before {
+      content: '⚠️';
+      margin-right: 0.5rem;
+      animation: pulse 2s infinite;
+    }
+
+    .card.grievance-highlight {
+      border-left: 4px solid var(--danger);
+      background: rgba(231, 76, 60, 0.05);
+    }
+    .card.grievance-highlight::before {
+      content: '⚠️';
+      margin-right: 0.5rem;
+      animation: pulse 2s infinite;
+    }
+
+    .btn-small {
+      padding: 0.5rem 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .btn-small:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    .btn-small.secondary {
+      background: var(--secondary);
+    }
+    .btn-small.secondary:hover {
+      background: #003366;
+    }
+    .btn-small.danger {
+      background: var(--danger);
+    }
+    .btn-small.danger:hover {
+      background: #c0392b;
+    }
+    .btn-small.success {
+      background: var(--success);
+    }
+    .btn-small.success:hover {
+      background: #229954;
+    }
+
+    .sos-btn {
+      width: 100%;
+      padding: 2rem;
+      background: linear-gradient(135deg, #E74C3C, #C0392B);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 2rem;
+      animation: pulse 2s infinite;
+    }
+    .sos-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 24px rgba(231, 76, 60, 0.4);
+    }
+    .sos-btn:active {
+      transform: scale(0.98);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+      overflow-x: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .nav-item.active {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .nav-item .icon {
+      font-size: 20px;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .modal.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px 12px 0 0;
+      padding: 1.5rem;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-content h3 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 1.5rem;
+    }
+    .modal-actions .btn-primary {
+      flex: 1;
+      margin: 0;
+    }
+    .modal-btn-secondary {
+      flex: 1;
+      padding: 0.9rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .modal-btn-secondary:hover {
+      background: var(--bg-input);
+      border-color: var(--text-muted);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 1rem;
+      right: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      z-index: 400;
+      animation: slideUp 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .hidden { display: none !important; }
+
+    .message-window {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 320px;
+      height: 400px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      z-index: 500;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+      margin-bottom: 1rem;
+    }
+
+    .message-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .message-header h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .close-msg-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: color 0.2s;
+    }
+    .close-msg-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .message-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .message-item {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+    .message-item.sent {
+      justify-content: flex-end;
+    }
+
+    .message-text {
+      background: var(--bg-input);
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+    .message-item.sent .message-text {
+      background: var(--primary);
+      color: white;
+    }
+
+    .message-input {
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+    }
+    .message-input input {
+      flex: 1;
+      padding: 0.6rem;
+      font-size: 0.85rem;
+    }
+    .message-input button {
+      padding: 0.6rem 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .volunteer-card, .camp-card {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .volunteer-avatar, .camp-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .volunteer-info, .camp-info {
+      flex: 1;
+    }
+    .volunteer-name, .camp-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.2rem;
+    }
+    .volunteer-detail, .camp-detail {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .volunteer-actions, .camp-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.7rem;
+      flex-wrap: wrap;
+    }
+
+    .family-member, .pet-item {
+      background: var(--bg-input);
+      padding: 0.8rem;
+      border-radius: 6px;
+      margin-bottom: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .family-member-info, .pet-info {
+      flex: 1;
+    }
+    .family-member-name, .pet-name {
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    .family-member-detail, .pet-detail {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .community-post {
+      margin-bottom: 1rem;
+    }
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.8rem;
+    }
+    .post-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .post-time {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .post-content {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 0.8rem;
+    }
+
+    .alert-item {
+      padding: 1rem;
+      border-left: 4px solid var(--warning);
+      background: rgba(243, 156, 18, 0.05);
+      margin-bottom: 0.8rem;
+    }
+    .alert-item.high {
+      border-left-color: var(--danger);
+      background: rgba(231, 76, 60, 0.05);
+    }
+
+    .profile-section {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), #FF8C42);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 auto 1rem;
+    }
+
+    .profile-stats {
+      display: flex;
+      justify-content: space-around;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .visibility-badge {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      background: var(--bg-input);
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .logout-btn-header {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.5rem;
+      transition: color 0.2s;
+    }
+    .logout-btn-header:hover {
+      color: var(--primary);
+    }
+
+    .error-message {
+      background: rgba(231, 76, 60, 0.1);
+      border: 1px solid var(--danger);
+      border-radius: 6px;
+      padding: 0.8rem;
+      color: var(--danger);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .success-message {
+      background: rgba(39, 174, 96, 0.1);
+      border: 1px solid var(--success);
+      border-radius: 6px;
+      padding: 0.8rem;
+      color: var(--success);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div class="splash-screen" id="splash-screen">
+  <div class="splash-content">
+    <div class="splash-title">🛡️</div>
+    <div class="splash-title" style="font-size: 1.8rem; margin-top: -0.5rem;">URSafe</div>
+    <div class="splash-subtitle">Disaster Safety & Community Response</div>
+    <div class="splash-loader" style="margin-top: 2rem;">
+      <div class="loader-bar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN PAGE -->
+<div class="page login-page" id="login-page">
+  <div class="login-header">
+    <div class="login-logo">🛡️</div>
+    <h1>UR<span style="color: var(--primary);">Safe</span></h1>
+    <p>Know what's happening around you. Stay safe.</p>
+  </div>
+
+  <div class="login-form-container">
+    <div class="login-tabs">
+      <button class="login-tab active" data-tab="phone">📱 Phone</button>
+      <button class="login-tab" data-tab="name">👤 Name</button>
+    </div>
+
+    <form id="phone-login-form" class="login-form">
+      <div class="form-group">
+        <label for="phone-number">Mobile Number</label>
+        <input type="tel" id="phone-number" placeholder="9191919191" inputmode="numeric" required aria-label="Mobile Number">
+      </div>
+      <div class="form-group">
+        <label for="phone-name">Your Name</label>
+        <input type="text" id="phone-name" placeholder="e.g., Raj Kumar" required aria-label="Your Name">
+      </div>
+      <div class="form-group">
+        <label for="phone-role">I am a</label>
+        <select id="phone-role" required aria-label="Role Selection">
+          <option value="">Select your role</option>
+          <option value="citizen">Citizen</option>
+          <option value="volunteer">Volunteer</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="phone-state">State</label>
+          <select id="phone-state" required aria-label="State Selection">
+            <option value="">Select</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="phone-district">District</label>
+          <select id="phone-district" required aria-label="District Selection">
+            <option value="">Select</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary">
+        <span class="btn-text">Login & Continue</span>
+        <span class="btn-loader"></span>
+      </button>
+    </form>
+
+    <form id="name-login-form" class="login-form form-hidden">
+      <div class="form-group">
+        <label for="user-name">Your Name</label>
+        <input type="text" id="user-name" placeholder="e.g., Raj Kumar" required aria-label="Your Name">
+      </div>
+      <div class="form-group">
+        <label for="user-role">I am a</label>
+        <select id="user-role" required aria-label="Role Selection">
+          <option value="">Select your role</option>
+          <option value="citizen">Citizen</option>
+          <option value="volunteer">Volunteer</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="user-state">State</label>
+          <select id="user-state" required aria-label="State Selection">
+            <option value="">Select</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="user-district">District</label>
+          <select id="user-district" required aria-label="District Selection">
+            <option value="">Select</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary">
+        <span class="btn-text">Get Started</span>
+        <span class="btn-loader"></span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="page hidden">
+  <div class="app-header">
+    <h2 id="header-section">Alerts & Predictions</h2>
+    <div class="header-actions">
+      <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light theme">☀️</button>
+      <div class="user-info-badge" id="user-badge">📱</div>
+      <button class="logout-btn-header" onclick="app.logout()" title="Logout" aria-label="Logout">🚪</button>
+    </div>
+  </div>
+
+  <div class="sections-container">
+    <!-- CITIZEN SECTIONS -->
+    <div class="section active" id="section-alerts"></div>
+    <div class="section" id="section-family-link"></div>
+    <div class="section" id="section-volunteers-camps"></div>
+    <div class="section" id="section-community"></div>
+
+    <!-- VOLUNTEER SECTIONS -->
+    <div class="section" id="section-camp"></div>
+    <div class="section" id="section-connect"></div>
+    <div class="section" id="section-grievances"></div>
+    <div class="section" id="section-vol-community"></div>
+    <div class="section" id="section-vol-history"></div>
+    <div class="section" id="section-profile"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="nav-main">
+    <!-- CITIZEN NAV -->
+    <div class="nav-item citizen-nav active" data-section="alerts">
+      <div class="icon">⚠️</div>
+      <div>Alerts</div>
+    </div>
+    <div class="nav-item citizen-nav" data-section="family-link">
+      <div class="icon">👨‍👩‍👧</div>
+      <div>Family</div>
+    </div>
+    <div class="nav-item citizen-nav" data-section="volunteers-camps">
+      <div class="icon">🤝</div>
+      <div>Volunteers</div>
+    </div>
+    <div class="nav-item citizen-nav" data-section="community">
+      <div class="icon">💬</div>
+      <div>Community</div>
+    </div>
+
+    <!-- VOLUNTEER NAV (hidden by default) -->
+    <div class="nav-item volunteer-nav" data-section="camp" style="display:none;">
+      <div class="icon">🏕️</div>
+      <div>Camp</div>
+    </div>
+    <div class="nav-item volunteer-nav" data-section="connect" style="display:none;">
+      <div class="icon">👥</div>
+      <div>Connect</div>
+    </div>
+    <div class="nav-item volunteer-nav" data-section="grievances" style="display:none;">
+      <div class="icon">⚠️</div>
+      <div>Grievances</div>
+    </div>
+    <div class="nav-item volunteer-nav" data-section="vol-community" style="display:none;">
+      <div class="icon">💬</div>
+      <div>Community</div>
+    </div>
+    <div class="nav-item volunteer-nav" data-section="vol-history" style="display:none;">
+      <div class="icon">📋</div>
+      <div>History</div>
+    </div>
+    <div class="nav-item volunteer-nav" data-section="profile" style="display:none;">
+      <div class="icon">👤</div>
+      <div>Profile</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+const IndianStates = {
+  "Andhra Pradesh": ["Visakhapatnam","Vijayawada","Guntur"],
+  "Assam": ["Guwahati","Dibrugarh","Silchar"],
+  "Bihar": ["Patna","Gaya","Muzaffarpur"],
+  "Delhi": ["New Delhi","North Delhi","South Delhi"],
+  "Gujarat": ["Ahmedabad","Surat","Vadodara"],
+  "Karnataka": ["Bengaluru","Mysuru","Mangaluru"],
+  "Kerala": ["Thiruvananthapuram","Kochi","Kozhikode"],
+  "Maharashtra": ["Mumbai","Pune","Nagpur"],
+  "Tamil Nadu": ["Chennai","Coimbatore","Madurai"],
+  "Telangana": ["Hyderabad","Warangal","Nizamabad"],
+  "Uttar Pradesh": ["Lucknow","Kanpur","Varanasi"],
+};
+
+const MockVolunteers = [
+  { id: 1, name: 'Dr. Anita', specialty: 'Medical', phone: '9821234567', coords: '12.9716,77.5946', distance: '0.8 km' },
+  { id: 2, name: 'Rahul Singh', specialty: 'Rescue', phone: '9876543210', coords: '12.9352,77.6245', distance: '1.2 km' },
+  { id: 3, name: 'Meena Patel', specialty: 'Supplies', phone: '9123456789', coords: '13.0352,77.6200', distance: '1.5 km' },
+  { id: 4, name: 'Arjun Verma', specialty: 'Communication', phone: '9998765432', coords: '12.9250,77.6100', distance: '2.1 km' },
+];
+
+const MockCamps = [
+  { id: 1, name: 'Medical Relief Camp', type: '🏥 Medical', coords: '12.9716,77.5946', capacity: '100', details: 'Emergency medical facility' },
+  { id: 2, name: 'Food & Water Distribution', type: '🍚 Supplies', coords: '13.0100,77.5900', capacity: '500', details: 'Food and drinking water' },
+  { id: 3, name: 'Emergency Shelter', type: '🏠 Shelter', coords: '12.9500,77.6300', capacity: '200', details: 'Temporary accommodation' },
+];
+
+const MockAlerts = [
+  { id: 1, type: 'Flood Warning', level: 'high', message: 'Heavy rainfall expected in next 6 hours', time: '5 mins ago' },
+  { id: 2, type: 'Landslide Alert', level: 'critical', message: 'High risk zone in western slopes', time: '2 mins ago' },
+  { id: 3, type: 'Wind Advisory', level: 'moderate', message: 'Strong winds forecasted', time: '15 mins ago' },
+];
+
+let app = null;
+
+class URSafeApp {
+  constructor() {
+    this.currentUser = null;
+    this.familyMembers = [];
+    this.pets = [];
+    this.userCoords = '12.9716,77.5946';
+    this.messageWindows = new Map();
+    this.theme = 'dark';
+
+    this.init();
+  }
+
+  init() {
+    this.loadFromStorage();
+    this.setupLoginTabs();
+    this.setupEventListeners();
+    this.setupThemeToggle();
+    this.showSplash();
+  }
+
+  // IMPROVED: Theme toggle functionality
+  setupThemeToggle() {
+    const toggle = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('ursafe_theme') || 'dark';
+    this.theme = savedTheme;
+    this.applyTheme(savedTheme);
+
+    toggle.addEventListener('click', () => {
+      this.theme = this.theme === 'dark' ? 'light' : 'dark';
+      this.applyTheme(this.theme);
+      localStorage.setItem('ursafe_theme', this.theme);
+    });
+  }
+
+  applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const toggle = document.getElementById('theme-toggle');
+    toggle.textContent = theme === 'dark' ? '🌙' : '☀️';
+  }
+
+  loadFromStorage() {
+    const stored = localStorage.getItem('ursafe_user');
+    if (stored) {
+      this.currentUser = JSON.parse(stored);
+      const familyStored = localStorage.getItem('ursafe_family');
+      if (familyStored) {
+        this.familyMembers = JSON.parse(familyStored);
+      }
+      const petsStored = localStorage.getItem('ursafe_pets');
+      if (petsStored) {
+        this.pets = JSON.parse(petsStored);
+      }
+    }
+  }
+
+  saveToStorage() {
+    if (this.currentUser) {
+      localStorage.setItem('ursafe_user', JSON.stringify(this.currentUser));
+      localStorage.setItem('ursafe_family', JSON.stringify(this.familyMembers));
+      localStorage.setItem('ursafe_pets', JSON.stringify(this.pets));
+    }
+  }
+
+  setupLoginTabs() {
+    document.querySelectorAll('.login-tab').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        const tabName = e.target.dataset.tab;
+        document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        document.querySelectorAll('.login-form').forEach(f => f.classList.add('form-hidden'));
+        document.getElementById(`${tabName}-login-form`).classList.remove('form-hidden');
+      });
+    });
+
+    this.initializeLocationDropdowns();
+  }
+
+  initializeLocationDropdowns() {
+    const stateSelects = ['phone-state', 'user-state'];
+    stateSelects.forEach((selectId) => {
+      const select = document.getElementById(selectId);
+      Object.keys(IndianStates).sort().forEach(state => {
+        const option = document.createElement('option');
+        option.value = state;
+        option.textContent = state;
+        select.appendChild(option);
+      });
+
+      select.addEventListener('change', () => {
+        const selectedState = select.value;
+        const districtSelectId = selectId === 'phone-state' ? 'phone-district' : 'user-district';
+        const districtSelect = document.getElementById(districtSelectId);
+        districtSelect.innerHTML = '<option value="">Select</option>';
+        if (selectedState) {
+          IndianStates[selectedState].forEach(district => {
+            const option = document.createElement('option');
+            option.value = district;
+            option.textContent = district;
+            districtSelect.appendChild(option);
+          });
+        }
+      });
+    });
+
+    document.getElementById('phone-number').addEventListener('input', (e) => {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length > 10) value = value.slice(0, 10);
+      e.target.value = value;
+    });
+  }
+
+  showSplash() {
+    setTimeout(() => {
+      document.getElementById('splash-screen').classList.add('hidden');
+      this.checkUserLogin();
+    }, 2400);
+  }
+
+  checkUserLogin() {
+    if (this.currentUser) {
+      this.showMainApp();
+    } else {
+      this.showLoginPage();
+    }
+  }
+
+  showLoginPage() {
+    document.getElementById('login-page').classList.remove('hidden');
+    document.getElementById('main-app').classList.add('hidden');
+  }
+
+  showMainApp() {
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+    this.updateUserBadge();
+
+    if (this.currentUser.role === 'volunteer') {
+      this.initializeVolunteer();
+    } else {
+      this.initializeCitizen();
+    }
+  }
+
+  initializeCitizen() {
+    document.querySelectorAll('.citizen-nav').forEach(el => el.style.display = 'flex');
+    document.querySelectorAll('.volunteer-nav').forEach(el => el.style.display = 'none');
+    document.getElementById('section-alerts').innerHTML = '';
+    this.switchSection('alerts');
+  }
+
+  initializeVolunteer() {
+    document.querySelectorAll('.citizen-nav').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.volunteer-nav').forEach(el => el.style.display = 'flex');
+    document.getElementById('section-camp').innerHTML = '';
+    this.switchSection('camp');
+  }
+
+  updateUserBadge() {
+    const badge = document.getElementById('user-badge');
+    const phone = this.currentUser.phone || 'User';
+    badge.textContent = `📱 ${phone}`;
+  }
+
+  setupEventListeners() {
+    document.getElementById('phone-login-form').addEventListener('submit', (e) => this.handlePhoneLogin(e));
+    document.getElementById('name-login-form').addEventListener('submit', (e) => this.handleNameLogin(e));
+
+    document.querySelectorAll('#nav-main .nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const section = btn.dataset.section;
+        this.switchSection(section);
+      });
+    });
+  }
+
+  switchSection(section) {
+    document.querySelectorAll('#nav-main .nav-item').forEach(item => item.classList.remove('active'));
+    document.querySelector(`#nav-main [data-section="${section}"]`).classList.add('active');
+
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+    const sectionEl = document.getElementById(`section-${section}`);
+    if (sectionEl) {
+      sectionEl.classList.add('active');
+    }
+
+    const titles = {
+      alerts: '⚠️ Alerts & Predictions',
+      'family-link': '👨‍👩‍👧 Family Link',
+      'volunteers-camps': '🤝 Volunteers & Camps',
+      community: '💬 Community Feed',
+      camp: '🏕️ Camp Setup',
+      connect: '👥 Connect',
+      grievances: '⚠️ Grievances',
+      'vol-community': '💬 Community',
+      'vol-history': '📋 History',
+      profile: '👤 Profile'
+    };
+    document.getElementById('header-section').textContent = titles[section] || section;
+
+    if (section === 'alerts') this.renderAlerts();
+    else if (section === 'family-link') this.renderFamilyLink();
+    else if (section === 'volunteers-camps') this.renderVolunteersCamps();
+    else if (section === 'community') this.renderCommunityFeed();
+    else if (section === 'camp') this.renderCampSetup();
+    else if (section === 'connect') this.renderConnect();
+    else if (section === 'grievances') this.renderGrievances();
+    else if (section === 'vol-community') this.renderVolunteerCommunity();
+    else if (section === 'vol-history') this.renderVolunteerHistory();
+    else if (section === 'profile') this.renderProfile();
+  }
+
+  renderVolunteerHistory() {
+    const sectionEl = document.getElementById('section-vol-history');
+    sectionEl.innerHTML = `
+      <div class="section-header">📋 Activity History</div>
+      <div style="text-align: center; padding: 2rem; color: var(--text-muted);">No activity yet</div>
+    `;
+  }
+
+  renderAlerts() {
+    const sectionEl = document.getElementById('section-alerts');
+    sectionEl.innerHTML = '<div class="section-header">⚠️ Active Alerts & Predictions</div>';
+
+    MockAlerts.forEach(alert => {
+      const card = document.createElement('div');
+      card.className = `card alert-item ${alert.level === 'critical' ? 'high' : ''}`;
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
+          <div>
+            <div style="font-weight: 600; color: var(--text-primary);">${this.sanitize(alert.type)}</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">${this.sanitize(alert.time)}</div>
+          </div>
+          <span style="background: ${alert.level === 'critical' ? 'var(--danger)' : 'var(--warning)'}; color: white; padding: 0.3rem 0.7rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">${alert.level.toUpperCase()}</span>
+        </div>
+        <div style="color: var(--text-secondary); margin-bottom: 1rem;">${this.sanitize(alert.message)}</div>
+        <button class="btn-small" onclick="app.showToast('📤 Alert sent to family link')">📤 Send to Family</button>
+      `;
+      sectionEl.appendChild(card);
+    });
+  }
+
+  // IMPROVED: Input sanitization to prevent XSS
+  sanitize(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // IMPROVED: Validation for phone and email
+  validatePhone(phone) {
+    const phoneRegex = /^[6-9]\d{9}$/;
+    return phoneRegex.test(phone);
+  }
+
+  renderFamilyLink() {
+    const sectionEl = document.getElementById('section-family-link');
+    sectionEl.innerHTML = `
+      <div class="section-header">👨‍👩‍👧 Family Link Dashboard</div>
+
+      <button class="sos-btn" onclick="app.triggerSOS()">🚨 SOS - EMERGENCY</button>
+
+      <div class="card">
+        <h3 style="margin-bottom: 1rem; font-weight: 600;">Add Family Member</h3>
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="family-name" placeholder="Family member's name" aria-label="Family member name">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="family-phone" placeholder="Mobile number" inputmode="numeric" aria-label="Family member phone">
+        </div>
+        <div class="form-group">
+          <label>Relation</label>
+          <select id="family-relation" aria-label="Family relation">
+            <option value="">Select relation</option>
+            <option value="Mother">Mother</option>
+            <option value="Father">Father</option>
+            <option value="Spouse">Spouse</option>
+            <option value="Child">Child</option>
+            <option value="Sibling">Sibling</option>
+            <option value="Friend">Friend</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="app.addFamilyMember()">➕ Add Member</button>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom: 1rem; font-weight: 600;">Add Pet (Optional)</h3>
+        <div class="form-group">
+          <label>Pet Name</label>
+          <input type="text" id="pet-name" placeholder="Pet's name" aria-label="Pet name">
+        </div>
+        <div class="form-group">
+          <label>Hardware Device ID (Optional)</label>
+          <input type="text" id="pet-device" placeholder="GPS tracker device ID" aria-label="Pet device ID">
+        </div>
+        <button class="btn-primary" onclick="app.addPet()">🐾 Add Pet</button>
+      </div>
+
+      <div id="family-members-list"></div>
+
+      <div class="card" style="margin-top: 2rem;">
+        <h3 style="margin-bottom: 1rem; font-weight: 600;">Share Family Update</h3>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="family-message" placeholder="Share an update with family link (visible to all connected members)..." style="min-height: 80px;" aria-label="Family message"></textarea>
+        </div>
+        <button class="btn-primary" onclick="app.postFamilyMessage()">📤 Post to Family Link</button>
+      </div>
+
+      <div id="family-feed-container"></div>
+    `;
+    this.renderFamilyMembersList();
+    this.renderFamilyFeed();
+  }
+
+  renderFamilyMembersList() {
+    const container = document.getElementById('family-members-list');
+    if (!container) return;
+
+    if (this.familyMembers.length === 0) {
+      container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No family members added yet</div>';
+      return;
+    }
+
+    container.innerHTML = '<div class="section-header" style="margin-top: 2rem;">👨‍👩‍👧 Family Members Connected</div>';
+    this.familyMembers.forEach((member, idx) => {
+      const memberEl = document.createElement('div');
+      memberEl.className = 'family-member';
+      memberEl.innerHTML = `
+        <div class="family-member-info">
+          <div class="family-member-name">${this.sanitize(member.name)} 👤</div>
+          <div class="family-member-detail">${this.sanitize(member.relation)} • ${this.sanitize(member.phone)}</div>
+        </div>
+        <button class="btn-small danger" onclick="app.removeFamilyMember(${idx})">Remove</button>
+      `;
+      container.appendChild(memberEl);
+    });
+
+    if (this.pets.length > 0) {
+      const petsHeader = document.createElement('div');
+      petsHeader.className = 'section-header';
+      petsHeader.style.marginTop = '2rem';
+      petsHeader.textContent = '🐾 Connected Pets';
+      container.appendChild(petsHeader);
+
+      this.pets.forEach((pet, idx) => {
+        const petEl = document.createElement('div');
+        petEl.className = 'pet-item';
+        petEl.innerHTML = `
+          <div class="pet-info">
+            <div class="pet-name">${this.sanitize(pet.name)} 🐾</div>
+            <div class="pet-detail">${this.sanitize(pet.device || 'No device assigned')}</div>
+          </div>
+          <button class="btn-small danger" onclick="app.removePet(${idx})">Remove</button>
+        `;
+        container.appendChild(petEl);
+      });
+    }
+  }
+
+  renderFamilyFeed() {
+    const container = document.getElementById('family-feed-container');
+    if (!container) return;
+
+    const mockFeed = [
+      { type: 'sos', author: 'You', message: 'SOS ACTIVATED! Location: 12.9716,77.5946', time: '5 mins ago', icon: '🚨' },
+      { type: 'post', author: 'Mom', message: 'Reached home safely. All good here.', time: '15 mins ago', icon: '💬' },
+      { type: 'post', author: 'You', message: 'At the relief camp, helping with supplies', time: '1 hour ago', icon: '💬' },
+      { type: 'location', author: 'Dad', message: 'Location: 12.9500,77.6300 (Currently at shelter)', time: '1 hour ago', icon: '📍' },
+      { type: 'sos', author: 'Sibling', message: 'SOS - Need immediate help at 12.8900,77.5700', time: '2 hours ago', icon: '🚨' },
+    ];
+
+    container.innerHTML = '';
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.style.marginTop = '2rem';
+    header.textContent = '📢 Family Link Feed (Visible to All Members)';
+    container.appendChild(header);
+
+    mockFeed.forEach(item => {
+      const card = document.createElement('div');
+      let className = 'card community-post';
+      if (item.type === 'sos') {
+        className = 'card community-post';
+        card.style.borderLeft = '4px solid var(--danger)';
+        card.style.background = 'rgba(231, 76, 60, 0.05)';
+      }
+      card.className = className;
+      card.innerHTML = `
+        <div class="post-header">
+          <div>
+            <div class="post-name">${item.icon} ${this.sanitize(item.author)}</div>
+            <div class="post-time">${this.sanitize(item.time)}</div>
+          </div>
+          <span class="visibility-badge">${item.type.toUpperCase()}</span>
+        </div>
+        <div class="post-content">${this.sanitize(item.message)}</div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  postFamilyMessage() {
+    const msg = document.getElementById('family-message').value.trim();
+    if (!msg) {
+      this.showToast('Please write a message', 'error');
+      return;
+    }
+    this.showToast('✅ Message shared with all family members');
+    document.getElementById('family-message').value = '';
+    this.renderFamilyFeed();
+  }
+
+  addFamilyMember() {
+    const name = document.getElementById('family-name').value.trim();
+    const phone = document.getElementById('family-phone').value.trim();
+    const relation = document.getElementById('family-relation').value;
+
+    if (!name || !phone || !relation) {
+      this.showToast('Please fill all fields', 'error');
+      return;
+    }
+
+    // IMPROVED: Phone validation
+    if (!this.validatePhone(phone)) {
+      this.showToast('❌ Invalid phone number (10 digits required)', 'error');
+      return;
+    }
+
+    this.familyMembers.push({ name, phone, relation });
+    this.saveToStorage();
+    this.renderFamilyMembersList();
+    document.getElementById('family-name').value = '';
+    document.getElementById('family-phone').value = '';
+    document.getElementById('family-relation').value = '';
+    this.showToast('✅ Family member added');
+  }
+
+  removeFamilyMember(idx) {
+    this.familyMembers.splice(idx, 1);
+    this.saveToStorage();
+    this.renderFamilyMembersList();
+    this.showToast('Removed');
+  }
+
+  addPet() {
+    const name = document.getElementById('pet-name').value.trim();
+    const device = document.getElementById('pet-device').value.trim();
+
+    if (!name) {
+      this.showToast('Please enter pet name', 'error');
+      return;
+    }
+
+    this.pets.push({ name, device: device || 'No device' });
+    this.saveToStorage();
+    this.renderFamilyMembersList();
+    document.getElementById('pet-name').value = '';
+    document.getElementById('pet-device').value = '';
+    this.showToast('🐾 Pet added');
+  }
+
+  removePet(idx) {
+    this.pets.splice(idx, 1);
+    this.saveToStorage();
+    this.renderFamilyMembersList();
+    this.showToast('Removed');
+  }
+
+  triggerSOS() {
+    if (this.familyMembers.length === 0) {
+      this.showToast('❌ Add family members first', 'error');
+      return;
+    }
+    this.showToast(`🚨 SOS ACTIVATED! Location ${this.userCoords} sent to ${this.familyMembers.length} family member(s)`);
+  }
+
+  renderVolunteersCamps() {
+    const sectionEl = document.getElementById('section-volunteers-camps');
+    sectionEl.innerHTML = `
+      <div class="section-header">🤝 Nearby Volunteers & Camps</div>
+      <div style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem; font-weight: 600;">📍 Your Coordinates: ${this.sanitize(this.userCoords)}</h3>
+      </div>
+    `;
+
+    sectionEl.innerHTML += '<div style="font-weight: 600; color: var(--primary); margin-bottom: 1rem; margin-top: 1.5rem;">👥 Nearby Volunteers</div>';
+
+    MockVolunteers.forEach(vol => {
+      const card = document.createElement('div');
+      card.className = 'card volunteer-card';
+      card.innerHTML = `
+        <div class="volunteer-avatar">${vol.name.charAt(0)}</div>
+        <div class="volunteer-info">
+          <div class="volunteer-name">${this.sanitize(vol.name)}</div>
+          <div class="volunteer-detail">📍 ${this.sanitize(vol.specialty)} • ${this.sanitize(vol.distance)}</div>
+          <div class="volunteer-detail">Coords: ${this.sanitize(vol.coords)}</div>
+          <div class="volunteer-actions">
+            <button class="btn-small" onclick="app.openMessageWindow(${vol.id}, '${vol.name}')">💬 Message</button>
+            <button class="btn-small secondary" onclick="app.callVolunteer('${vol.phone}', '${vol.name}')">📞 Call</button>
+            <button class="btn-small success" onclick="app.sendLocationToVolunteer('${vol.coords}')">📍 Send Location</button>
+          </div>
+        </div>
+      `;
+      sectionEl.appendChild(card);
+    });
+
+    sectionEl.innerHTML += '<div style="font-weight: 600; color: var(--primary); margin: 1.5rem 0 1rem 0;">🏕️ Nearby Camps</div>';
+
+    MockCamps.forEach(camp => {
+      const card = document.createElement('div');
+      card.className = 'card camp-card';
+      card.innerHTML = `
+        <div class="camp-avatar">${camp.type.split(' ')[0]}</div>
+        <div class="camp-info">
+          <div class="camp-name">${this.sanitize(camp.name)}</div>
+          <div class="camp-detail">${this.sanitize(camp.type)} • Capacity: ${this.sanitize(camp.capacity)}</div>
+          <div class="camp-detail">📍 ${this.sanitize(camp.coords)}</div>
+          <div class="camp-detail">${this.sanitize(camp.details)}</div>
+          <div class="camp-actions">
+            <button class="btn-small success" onclick="app.sendLocationToCamp('${camp.coords}')">📤 Send Location to Camp</button>
+            <button class="btn-small secondary" onclick="app.showToast('🆘 Emergency request sent to camp')">🆘 Emergency Help</button>
+          </div>
+        </div>
+      `;
+      sectionEl.appendChild(card);
+    });
+  }
+
+  sendLocationToVolunteer(coords) {
+    this.showToast(`📍 Your location sent to volunteer at ${this.sanitize(coords)}`);
+  }
+
+  sendLocationToCamp(coords) {
+    this.showToast(`📤 Location shared with camp at ${this.sanitize(coords)}`);
+  }
+
+  callVolunteer(phone, name) {
+    if (confirm(`Call ${name} at ${phone}?`)) {
+      this.showToast(`📞 Calling ${this.sanitize(name)}...`);
+    }
+  }
+
+  renderCommunityFeed() {
+    const sectionEl = document.getElementById('section-community');
+    sectionEl.innerHTML = `
+      <div class="section-header">💬 Community Feed</div>
+      <div class="card">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Share an Update</label>
+          <textarea id="community-post" placeholder="Share important information..." style="min-height: 80px;" aria-label="Community post"></textarea>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <select id="community-visibility" aria-label="Post visibility">
+            <option value="everyone">👥 Everyone</option>
+            <option value="volunteers">🤝 Volunteers Only</option>
+            <option value="government">🏛️ Government</option>
+            <option value="citizens">👫 Citizens Only</option>
+          </select>
+          <button class="btn-primary" style="flex: 0 0 100px; width: auto;" onclick="app.postCommunity()">📤 Post</button>
+        </div>
+      </div>
+      <div id="community-feed-container"></div>
+    `;
+    this.renderCommunityPosts();
+  }
+
+  renderCommunityPosts() {
+    const container = document.getElementById('community-feed-container');
+    const posts = [
+      { author: 'Relief Coordinator', message: 'Medical camps operating downtown. Come for free checkups.', visibility: 'everyone', time: '30 mins ago' },
+      { author: 'Government Official', message: 'Safe routes updated. Use main highway only.', visibility: 'everyone', time: '1 hour ago' },
+    ];
+
+    container.innerHTML = '';
+    posts.forEach(post => {
+      const card = document.createElement('div');
+      card.className = 'card community-post';
+      card.innerHTML = `
+        <div class="post-header">
+          <div>
+            <div class="post-name">${this.sanitize(post.author)}</div>
+            <div class="post-time">${this.sanitize(post.time)}</div>
+          </div>
+          <span class="visibility-badge">${post.visibility}</span>
+        </div>
+        <div class="post-content">${this.sanitize(post.message)}</div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  postCommunity() {
+    const msg = document.getElementById('community-post').value.trim();
+    if (msg) {
+      this.showToast('✅ Post shared');
+      document.getElementById('community-post').value = '';
+    }
+  }
+
+  renderCampSetup() {
+    const sectionEl = document.getElementById('section-camp');
+    sectionEl.innerHTML = `
+      <div class="section-header">🏕️ Camp Setup</div>
+      <div class="card">
+        <form id="campForm">
+          <div class="form-group">
+            <label>Camp Name *</label>
+            <input type="text" placeholder="e.g., Medical Relief Camp" aria-label="Camp name">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Location *</label>
+              <input type="text" placeholder="Address" aria-label="Camp location">
+            </div>
+            <div class="form-group">
+              <label>Capacity *</label>
+              <input type="number" placeholder="Number of people" aria-label="Camp capacity">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Camp Type *</label>
+            <select required aria-label="Camp type">
+              <option value="">Select</option>
+              <option value="medical">🏥 Medical Relief</option>
+              <option value="supplies">📦 Supplies</option>
+              <option value="shelter">🏠 Shelter</option>
+              <option value="rescue">🚒 Rescue</option>
+              <option value="food">🍚 Food & Water</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary">💾 Save</button>
+        </form>
+      </div>
+    `;
+    document.getElementById('campForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.showToast('✅ Camp information saved');
+    });
+  }
+
+  renderConnect() {
+    const sectionEl = document.getElementById('section-connect');
+    sectionEl.innerHTML = '<div class="section-header">👥 Connect with Volunteers</div>';
+
+    const mockVolsList = [
+      { id: 1, name: 'Dr. Anita Kumar', specialty: 'Medical', status: 'available', phone: '9821234567' },
+      { id: 2, name: 'Rahul Singh', specialty: 'Rescue', status: 'available', phone: '9876543210' },
+      { id: 3, name: 'Meena Patel', specialty: 'Supplies', status: 'busy', phone: '9123456789' },
+      { id: 4, name: 'Arjun Verma', specialty: 'Communication', status: 'available', phone: '9998765432' },
+    ];
+
+    mockVolsList.forEach(vol => {
+      const card = document.createElement('div');
+      card.className = 'card volunteer-card';
+      card.innerHTML = `
+        <div class="volunteer-avatar">${vol.name.charAt(0)}</div>
+        <div class="volunteer-info">
+          <div class="volunteer-name">${this.sanitize(vol.name)}</div>
+          <div class="volunteer-detail">${this.sanitize(vol.specialty)} ${vol.status === 'available' ? '🟢' : '🔴'}</div>
+          <div class="volunteer-actions">
+            <button class="btn-small" onclick="app.openMessageWindow(${vol.id}, '${vol.name}')">💬 Message</button>
+            <button class="btn-small danger" onclick="app.initiateCall('${vol.phone}', '${vol.name}')">📞 Call</button>
+          </div>
+        </div>
+      `;
+      sectionEl.appendChild(card);
+    });
+  }
+
+  renderGrievances() {
+    const sectionEl = document.getElementById('section-grievances');
+    sectionEl.innerHTML = '<div class="section-header">⚠️ Citizen Grievances</div>';
+
+    const grievances = [
+      { id: 1, type: 'Medical', sender: 'Rajesh Patel', msg: 'Family member needs immediate medical help', time: '2 mins ago' },
+      { id: 2, type: 'Emergency', sender: 'Priya Sharma', msg: 'Missing child - last seen near market', time: '5 mins ago' },
+      { id: 3, type: 'Supplies', sender: 'Ahmad Khan', msg: 'Need food and water for elderly family', time: '15 mins ago' },
+    ];
+
+    grievances.forEach(griev => {
+      const card = document.createElement('div');
+      card.className = 'card grievance-highlight';
+      card.innerHTML = `
+        <div style="margin-bottom: 0.8rem;">
+          <span style="background: var(--danger); color: white; padding: 0.3rem 0.7rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">${griev.type}</span>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">${griev.time}</div>
+        </div>
+        <div style="margin: 0.8rem 0; color: var(--text-secondary);">"${this.sanitize(griev.msg)}"</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem;">From: ${this.sanitize(griev.sender)}</div>
+        <button class="btn-small" onclick="app.openMessageWindow('${griev.sender}', '${griev.sender}')">💬 Respond</button>
+      `;
+      sectionEl.appendChild(card);
+    });
+  }
+
+  renderVolunteerCommunity() {
+    const sectionEl = document.getElementById('section-vol-community');
+    sectionEl.innerHTML = `
+      <div class="section-header">💬 Community Feed - Volunteer</div>
+      <div class="card">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Share an Update</label>
+          <textarea id="vol-community-post" placeholder="Share important information with the community..." style="min-height: 80px;" aria-label="Volunteer community post"></textarea>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <select id="vol-community-visibility" style="flex: 1;" aria-label="Community post visibility">
+            <option value="everyone">👥 Everyone</option>
+            <option value="volunteers">🤝 Volunteers Only</option>
+            <option value="government">🏛️ Government</option>
+            <option value="citizens">👫 Citizens Only</option>
+          </select>
+          <button class="btn-primary" style="flex: 0 0 100px; width: auto;" onclick="app.postVolunteerCommunity()">📤 Post</button>
+        </div>
+      </div>
+      <div id="vol-community-feed-container"></div>
+    `;
+    this.renderVolunteerCommunityPosts();
+  }
+
+  renderVolunteerCommunityPosts() {
+    const container = document.getElementById('vol-community-feed-container');
+    if (!container) return;
+
+    const posts = [
+      { author: 'Relief Coordinator', message: 'Medical camps operating downtown. Come for free checkups.', visibility: 'everyone', time: '30 mins ago' },
+      { author: 'Government Official', message: 'Safe routes updated. Use main highway only.', visibility: 'everyone', time: '1 hour ago' },
+      { author: 'Volunteer Network', message: 'Coordination meeting at 6 PM. All volunteers welcome.', visibility: 'volunteers', time: '45 mins ago' },
+    ];
+
+    container.innerHTML = '';
+    posts.forEach(post => {
+      const card = document.createElement('div');
+      card.className = 'card community-post';
+      card.innerHTML = `
+        <div class="post-header">
+          <div>
+            <div class="post-name">${this.sanitize(post.author)}</div>
+            <div class="post-time">${this.sanitize(post.time)}</div>
+          </div>
+          <span class="visibility-badge">${post.visibility}</span>
+        </div>
+        <div class="post-content">${this.sanitize(post.message)}</div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  postVolunteerCommunity() {
+    const msg = document.getElementById('vol-community-post').value.trim();
+    if (msg) {
+      this.showToast('✅ Post shared with community');
+      document.getElementById('vol-community-post').value = '';
+    } else {
+      this.showToast('Please write a message', 'error');
+    }
+  }
+
+  renderProfile() {
+    const sectionEl = document.getElementById('section-profile');
+    const initial = this.currentUser.name.charAt(0).toUpperCase();
+    sectionEl.innerHTML = `
+      <div class="profile-section">
+        <div class="profile-avatar">${initial}</div>
+        <div style="font-size: 1.3rem; font-weight: 700;">${this.sanitize(this.currentUser.name)}</div>
+        <div style="font-size: 0.9rem; color: var(--text-muted);">Volunteer</div>
+        <div class="profile-stats">
+          <div class="stat-item">
+            <div class="stat-number">1</div>
+            <div class="stat-label">Camps</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">4</div>
+            <div class="stat-label">Connections</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <button class="btn-small" style="width: 100%; margin-bottom: 0.8rem;">✏️ Edit Profile</button>
+        <button class="btn-small" style="width: 100%; margin-bottom: 0.8rem;">🔔 Notifications</button>
+        <button class="btn-small danger" onclick="app.logout()" style="width: 100%;">🚪 Logout</button>
+      </div>
+    `;
+  }
+
+  openMessageWindow(id, name) {
+    const msgWindow = document.createElement('div');
+    msgWindow.className = 'message-window';
+    msgWindow.id = `msg-${id}`;
+    msgWindow.innerHTML = `
+      <div class="message-header">
+        <h3>${this.sanitize(name)}</h3>
+        <button class="close-msg-btn" onclick="app.closeMessageWindow(${id})">✕</button>
+      </div>
+      <div class="message-body"></div>
+      <div class="message-input">
+        <input type="text" placeholder="Type message..." class="msg-input" aria-label="Message input">
+        <button onclick="app.sendMessage(${id})" aria-label="Send message">📤</button>
+      </div>
+    `;
+    document.body.appendChild(msgWindow);
+    this.messageWindows.set(id, msgWindow);
+  }
+
+  closeMessageWindow(id) {
+    const window = document.getElementById(`msg-${id}`);
+    if (window) {
+      window.remove();
+      this.messageWindows.delete(id);
+    }
+  }
+
+  sendMessage(id) {
+    const window = document.getElementById(`msg-${id}`);
+    const input = window.querySelector('.msg-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const body = window.querySelector('.message-body');
+    const item = document.createElement('div');
+    item.className = 'message-item sent';
+    const msgText = document.createElement('div');
+    msgText.className = 'message-text';
+    msgText.textContent = msg;
+    item.appendChild(msgText);
+    body.appendChild(item);
+    body.scrollTop = body.scrollHeight;
+    input.value = '';
+  }
+
+  initiateCall(phone, name) {
+    if (confirm(`Call ${name} at ${phone}?`)) {
+      this.showToast(`📞 Calling ${this.sanitize(name)}...`);
+    }
+  }
+
+  async handlePhoneLogin(e) {
+    e.preventDefault();
+    const phone = document.getElementById('phone-number').value.trim();
+    const name = document.getElementById('phone-name').value.trim();
+    const role = document.getElementById('phone-role').value;
+    const state = document.getElementById('phone-state').value;
+    const district = document.getElementById('phone-district').value;
+
+    if (!phone || !name || !role || !state || !district) {
+      this.showToast('Please fill all fields', 'error');
+      return;
+    }
+
+    if (!this.validatePhone(phone)) {
+      this.showToast('❌ Invalid phone number', 'error');
+      return;
+    }
+
+    const btn = document.querySelector('#phone-login-form .btn-primary');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoader = btn.querySelector('.btn-loader');
+    btnText.classList.add('hidden');
+    btnLoader.classList.remove('hidden');
+    btn.disabled = true;
+
+    await new Promise(r => setTimeout(r, 1000));
+
+    this.currentUser = {
+      phone: '+91-' + phone,
+      name,
+      role,
+      state,
+      district,
+      id: 'user_' + phone
+    };
+
+    this.saveToStorage();
+    btnText.classList.remove('hidden');
+    btnLoader.classList.add('hidden');
+    btn.disabled = false;
+
+    this.showMainApp();
+    this.showToast(`Welcome ${name}! 🛡️`, 'success');
+  }
+
+  async handleNameLogin(e) {
+    e.preventDefault();
+    const name = document.getElementById('user-name').value.trim();
+    const role = document.getElementById('user-role').value;
+    const state = document.getElementById('user-state').value;
+    const district = document.getElementById('user-district').value;
+
+    if (!name || !role || !state || !district) {
+      this.showToast('Please fill all fields', 'error');
+      return;
+    }
+
+    const btn = document.querySelector('#name-login-form .btn-primary');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoader = btn.querySelector('.btn-loader');
+    btnText.classList.add('hidden');
+    btnLoader.classList.remove('hidden');
+    btn.disabled = true;
+
+    await new Promise(r => setTimeout(r, 1000));
+
+    this.currentUser = {
+      name,
+      role,
+      state,
+      district,
+      id: 'user_' + Date.now()
+    };
+
+    this.saveToStorage();
+    btnText.classList.remove('hidden');
+    btnLoader.classList.add('hidden');
+    btn.disabled = false;
+
+    this.showMainApp();
+    this.showToast(`Welcome ${name}! 🛡️`, 'success');
+  }
+
+  showToast(msg, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+  }
+
+  logout() {
+    if (confirm('Are you sure you want to logout?')) {
+      this.currentUser = null;
+      localStorage.removeItem('ursafe_user');
+      this.showToast('Logged out');
+      setTimeout(() => location.reload(), 1000);
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  app = new URSafeApp();
+});
+</script>
+
+</body>
+</html>
